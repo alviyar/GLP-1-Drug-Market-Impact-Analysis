@@ -1,7 +1,7 @@
 # GLP-1 Drug Market Impact Analysis
-![Page 1](glp.1.png)
-![Page 1](glp.2.png)
-![Page 1](glp.3.png)
+![Page 1](docs/glp.1.png)
+![Page 1](docs/glp.2.png)
+![Page 1](docs/glp.3.png)
 # GLP-1 Drug Market Impact Analysis
 
 Medicare Part D spending, beneficiary growth, and coverage gap analysis for the GLP-1 drug class (Ozempic, Wegovy, Mounjaro, Zepbound, Trulicity, Rybelsus, Saxenda, Victoza), 2019–2023.
