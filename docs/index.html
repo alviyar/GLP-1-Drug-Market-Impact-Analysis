@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GLP-1 Drug Market Impact Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f7f4ef;
+      --surface:   #ffffff;
+      --surface2:  #f0ece4;
+      --border:    #ddd8cf;
+      --rose:      #b85c52;
+      --rose-light:#e8958e;
+      --rose-bg:   #fdf0ee;
+      --gold:      #a07840;
+      --teal:      #3a7a72;
+      --teal-bg:   #edf6f5;
+      --text:      #1e1a16;
+      --text2:     #4a423a;
+      --muted:     #8a7a6e;
+      --mono:      'JetBrains Mono', monospace;
+      --serif:     'Fraunces', Georgia, serif;
+      --sans:      'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(247,244,239,0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .nav-brand span { color: var(--rose); }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 7rem 2rem 4rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--rose);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 1.5px;
+      background: var(--rose);
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: clamp(2.6rem, 6vw, 4.4rem);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--gold);
+    }
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text2);
+      max-width: 580px;
+      line-height: 1.75;
+      margin-bottom: 2.5rem;
+    }
+    .hero-badges {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      background: var(--surface);
+    }
+    .badge.hi { border-color: var(--rose-light); color: var(--rose); background: var(--rose-bg); }
+    .badge.teal { border-color: #9dcdc8; color: var(--teal); background: var(--teal-bg); }
+    .hero-ctas { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.65rem 1.35rem;
+      font-family: var(--mono); font-size: 0.78rem;
+      letter-spacing: 0.05em; border-radius: 3px;
+      text-decoration: none; transition: all 0.18s; cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--rose); color: #fff; border-color: var(--rose); }
+    .btn-primary:hover { background: #9c4840; border-color: #9c4840; }
+    .btn-outline { background: var(--surface); color: var(--text2); border-color: var(--border); }
+    .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── STAT STRIP ── */
+    .stat-strip {
+      background: var(--text);
+      padding: 2.5rem 2rem;
+    }
+    .stat-strip-inner {
+      max-width: 960px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 2rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: var(--serif);
+      font-size: 2.5rem; font-weight: 700;
+      color: #f7f4ef;
+      line-height: 1; display: block; margin-bottom: 0.4rem;
+    }
+    .stat-num span { color: var(--rose-light); }
+    .stat-label {
+      font-family: var(--mono); font-size: 0.68rem;
+      color: #9a8a7e; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── SECTIONS ── */
+    section { padding: 5rem 2rem; }
+    .section-inner { max-width: 960px; margin: 0 auto; }
+    .section-label {
+      font-family: var(--mono); font-size: 0.7rem;
+      color: var(--rose); letter-spacing: 0.14em;
+      text-transform: uppercase; margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      font-weight: 700; margin-bottom: 0.5rem; color: var(--text);
+    }
+    .section-sub {
+      color: var(--text2); max-width: 540px;
+      margin-bottom: 2.5rem; line-height: 1.7; font-size: 0.95rem;
+    }
+
+    /* ── INTERACTIVE DASHBOARD ── */
+    #live-dashboard { background: var(--surface2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .dash-tabs {
+      display: flex; gap: 0; border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden; margin-bottom: 2rem;
+      background: var(--surface); width: fit-content;
+    }
+    .dash-tab {
+      font-family: var(--mono); font-size: 0.72rem;
+      padding: 0.55rem 1.1rem; cursor: pointer; border: none;
+      background: transparent; color: var(--muted);
+      letter-spacing: 0.06em; transition: all 0.18s;
+      border-right: 1px solid var(--border);
+    }
+    .dash-tab:last-child { border-right: none; }
+    .dash-tab.active { background: var(--rose); color: #fff; }
+    .dash-tab:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem 1.25rem 1rem;
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h4 {
+      font-family: var(--mono); font-size: 0.7rem;
+      color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 1rem;
+    }
+    .chart-card canvas { max-height: 240px; }
+    .chart-card.full canvas { max-height: 280px; }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 1rem 1.2rem;
+    }
+    .kpi-label {
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.35rem;
+    }
+    .kpi-value {
+      font-family: var(--serif); font-size: 1.7rem;
+      font-weight: 700; color: var(--text); line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem;
+    }
+    .kpi-sub.up { color: var(--teal); }
+    .kpi-sub.warn { color: var(--rose); }
+
+    .coverage-table {
+      width: 100%; border-collapse: collapse; font-size: 0.88rem;
+    }
+    .coverage-table th {
+      font-family: var(--mono); font-size: 0.66rem;
+      color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase; text-align: left;
+      padding: 0.6rem 0.75rem; border-bottom: 2px solid var(--border);
+    }
+    .coverage-table td {
+      padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border);
+      color: var(--text2); vertical-align: middle;
+    }
+    .coverage-table tr:last-child td { border-bottom: none; }
+    .pill {
+      display: inline-block; font-family: var(--mono); font-size: 0.65rem;
+      padding: 0.2rem 0.55rem; border-radius: 20px; letter-spacing: 0.04em;
+    }
+    .pill.covered { background: var(--teal-bg); color: var(--teal); }
+    .pill.not { background: var(--rose-bg); color: var(--rose); }
+    .pill.partial { background: #fef9e7; color: #a07000; }
+
+    /* ── DASHBOARD SCREENSHOTS ── */
+    .screenshots { display: flex; flex-direction: column; gap: 1.5rem; }
+    .screenshot-card {
+      border: 1px solid var(--border); border-radius: 6px;
+      overflow: hidden; background: var(--surface);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .screenshot-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: var(--rose-light); }
+    .screenshot-card img { width: 100%; display: block; }
+    .screenshot-meta {
+      padding: 0.85rem 1.2rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .screenshot-num { font-family: var(--mono); font-size: 0.68rem; color: var(--rose); letter-spacing: 0.08em; }
+    .screenshot-title { font-size: 0.88rem; color: var(--text2); font-weight: 500; }
+
+    /* ── FINDINGS GRID ── */
+    .findings-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1px; background: var(--border); border: 1px solid var(--border);
+      border-radius: 6px; overflow: hidden;
+    }
+    .finding-card { background: var(--surface); padding: 1.5rem; }
+    .finding-icon {
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--rose); letter-spacing: 0.1em; margin-bottom: 0.75rem;
+    }
+    .finding-text { font-size: 0.92rem; color: var(--text2); line-height: 1.65; }
+    .finding-text strong { color: var(--text); font-weight: 600; }
+
+    /* ── WORKFLOW ── */
+    .workflow-steps { display: flex; flex-direction: column; }
+    .workflow-step {
+      display: grid; grid-template-columns: 52px 1fr;
+      gap: 1.5rem; padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border); align-items: start;
+    }
+    .workflow-step:last-child { border-bottom: none; }
+    .step-num {
+      font-family: var(--serif); font-size: 1.6rem; font-weight: 700;
+      color: var(--border); line-height: 1.2; padding-top: 0.1rem;
+    }
+    .step-body h3 {
+      font-family: var(--serif); font-weight: 700;
+      font-size: 1.1rem; color: var(--text); margin-bottom: 0.4rem;
+    }
+    .step-body p { font-size: 0.9rem; color: var(--text2); line-height: 1.65; }
+    .step-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+    .step-tag {
+      font-family: var(--mono); font-size: 0.66rem; color: var(--muted);
+      border: 1px solid var(--border); padding: 0.15rem 0.5rem;
+      border-radius: 3px; background: var(--surface);
+    }
+
+    /* ── DATA BOX ── */
+    .data-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 1.5rem;
+      font-size: 0.9rem; color: var(--text2);
+    }
+    .data-box p { margin-bottom: 0.5rem; }
+    .data-box a { color: var(--rose); text-decoration: none; }
+    .data-box a:hover { text-decoration: underline; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
+    .data-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .data-table td:first-child {
+      font-family: var(--mono); color: var(--rose);
+      white-space: nowrap; width: 1%; padding-right: 1.5rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 2rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem; max-width: 960px; margin: 0 auto;
+    }
+    .footer-left { font-family: var(--mono); font-size: 0.73rem; color: var(--muted); }
+    .footer-left span { color: var(--rose); }
+    .footer-right { display: flex; gap: 1.25rem; }
+    .footer-right a { font-family: var(--mono); font-size: 0.73rem; color: var(--muted); text-decoration: none; }
+    .footer-right a:hover { color: var(--text); }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media (max-width: 640px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      nav { padding: 0 1rem; }
+      .nav-links { gap: 0.85rem; }
+      section { padding: 3.5rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand"><span>◈</span> GLP-1 Analysis</span>
+  <div class="nav-links">
+    <a href="#live-dashboard">Dashboard</a>
+    <a href="#powerbi">Power BI</a>
+    <a href="#findings">Findings</a>
+    <a href="https://github.com/alviyar/GLP-1-Drug-Market-Impact-Analysis" target="_blank">GitHub ↗</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Medicare Part D · 2019–2023</div>
+  <h1>GLP-1 Drug Market<br /><em>Impact Analysis</em></h1>
+  <p class="hero-desc">
+    Five years of CMS spending data reveal how Ozempic, Wegovy, and six other GLP-1 drugs reshaped Medicare Part D — and why a statutory coverage gap left obesity treatment almost entirely uninsured.
+  </p>
+  <div class="hero-badges">
+    <span class="badge hi">Python · pandas</span>
+    <span class="badge hi">Power BI · DAX</span>
+    <span class="badge teal">CMS Medicare Part D</span>
+    <span class="badge">14,309 rows · 46 cols</span>
+    <span class="badge">ZS Associates Case Style</span>
+  </div>
+  <div class="hero-ctas">
+    <a class="btn btn-primary" href="#live-dashboard">Explore Dashboard</a>
+    <a class="btn btn-outline" href="https://github.com/alviyar/GLP-1-Drug-Market-Impact-Analysis" target="_blank">GitHub Repo ↗</a>
+    <a class="btn btn-outline" href="https://github.com/alviyar/GLP-1-Drug-Market-Impact-Analysis/blob/main/Medicare_Part_D.ipynb" target="_blank">Jupyter Notebook ↗</a>
+  </div>
+</div>
+
+<!-- STAT STRIP -->
+<div class="stat-strip">
+  <div class="stat-strip-inner">
+    <div class="stat-item">
+      <span class="stat-num"><span>$20B</span>+</span>
+      <span class="stat-label">Part D spend 2023</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num"><span>471</span>%</span>
+      <span class="stat-label">Beneficiary growth</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num"><span>3.06</span>M</span>
+      <span class="stat-label">Patients in 2023</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num"><span>$233</span>K</span>
+      <span class="stat-label">Obesity coverage 2023</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num"><span>25.8</span>%</span>
+      <span class="stat-label">Ozempic price rise</span>
+    </div>
+  </div>
+</div>
+
+<!-- INTERACTIVE DASHBOARD -->
+<section id="live-dashboard">
+  <div class="section-inner">
+    <div class="section-label">Interactive · Built from CMS Data</div>
+    <h2 class="section-title">Live Dashboard</h2>
+    <p class="section-sub">Charts reproduced from the Power BI analysis. Switch between the three report pages.</p>
+
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="showTab('tab1',this)">PAGE 01 · Spending Overview</button>
+      <button class="dash-tab" onclick="showTab('tab2',this)">PAGE 02 · Coverage Gap</button>
+      <button class="dash-tab" onclick="showTab('tab3',this)">PAGE 03 · Data Quality</button>
+    </div>
+
+    <!-- PAGE 1 -->
+    <div class="dash-panel active" id="tab1">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Spend 2023</div>
+          <div class="kpi-value">$20.4B</div>
+          <div class="kpi-sub up">↑ 2,000%+ vs 2019</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Beneficiaries</div>
+          <div class="kpi-value">3.06M</div>
+          <div class="kpi-sub up">↑ 471% since 2019</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Spend / Beneficiary</div>
+          <div class="kpi-value">$6,667</div>
+          <div class="kpi-sub">Per patient in 2023</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">5-Year CAGR</div>
+          <div class="kpi-value">83%</div>
+          <div class="kpi-sub warn">Highest drug class growth</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card full">
+          <h4>Total Medicare Part D Spend on GLP-1 Drugs ($ Billions)</h4>
+          <canvas id="spendTrend"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>2023 Spending Share by Drug</h4>
+          <canvas id="spendDonut"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>YoY Spending Growth by Drug (%)</h4>
+          <canvas id="yoyBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="dash-panel" id="tab2">
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Diabetes Drug Spend 2023</div>
+          <div class="kpi-value">$18.2B</div>
+          <div class="kpi-sub up">Fully covered · Part D</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Obesity Drug Spend 2023</div>
+          <div class="kpi-value">$234K</div>
+          <div class="kpi-sub warn">Excluded by statute</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ozempic Avg/Claim 2023</div>
+          <div class="kpi-value">$1,180</div>
+          <div class="kpi-sub warn">↑ 25.8% since 2019</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Coverage Gap Ratio</div>
+          <div class="kpi-value">78,000×</div>
+          <div class="kpi-sub">Diabetes vs obesity spend</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h4>Diabetes vs. Obesity Spend 2023 ($B)</h4>
+          <canvas id="coverageBar"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>Beneficiary Growth 2019–2023 (Thousands)</h4>
+          <canvas id="beneLine"></canvas>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-top:0;">
+        <h4>Drug Coverage Status</h4>
+        <table class="coverage-table">
+          <thead>
+            <tr>
+              <th>Drug</th>
+              <th>Indication</th>
+              <th>Coverage Status</th>
+              <th>2023 Spend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Ozempic</td><td>Diabetes (T2D)</td><td><span class="pill covered">Covered</span></td><td>$12.6B</td></tr>
+            <tr><td>Trulicity</td><td>Diabetes (T2D)</td><td><span class="pill covered">Covered</span></td><td>$4.2B</td></tr>
+            <tr><td>Rybelsus</td><td>Diabetes (T2D)</td><td><span class="pill covered">Covered</span></td><td>$1.4B</td></tr>
+            <tr><td>Mounjaro</td><td>Diabetes (T2D)</td><td><span class="pill covered">Covered</span></td><td>$1.9B*</td></tr>
+            <tr><td>Victoza</td><td>Diabetes (T2D)</td><td><span class="pill covered">Covered</span></td><td>$58M</td></tr>
+            <tr><td>Wegovy</td><td>Obesity</td><td><span class="pill not">Not Covered</span></td><td>~$0</td></tr>
+            <tr><td>Zepbound</td><td>Obesity</td><td><span class="pill not">Not Covered</span></td><td>~$0</td></tr>
+            <tr><td>Saxenda</td><td>Obesity</td><td><span class="pill not">Not Covered</span></td><td>$233K</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem;">* Mounjaro 2023 reflects first full year vs. partial launch year 2022 — growth distortion noted in analysis.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="dash-panel" id="tab3">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h4>Avg Cost per Claim — Diabetes Drugs 2019–2023 ($)</h4>
+          <canvas id="costTrend"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>CMS Outlier Flags by Drug</h4>
+          <canvas id="outlierBar"></canvas>
+        </div>
+      </div>
+      <div class="findings-grid" style="margin-top:1.25rem;">
+        <div class="finding-card">
+          <div class="finding-icon">DQ_01</div>
+          <p class="finding-text">2,201 exact duplicate rows removed. Legitimate multi-row brand/generic entries retained after investigation.</p>
+        </div>
+        <div class="finding-card">
+          <div class="finding-icon">DQ_02</div>
+          <p class="finding-text">Nulls resolved by cause — not blanket-imputed. CMS privacy-suppressed counts (&lt;11 patients) left as NaN.</p>
+        </div>
+        <div class="finding-card">
+          <div class="finding-icon">DQ_03</div>
+          <p class="finding-text">Only 3 CMS outlier flags across the 5-year window, both tied to low-volume obesity drugs. Data quality validated.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- POWER BI SCREENSHOTS -->
+<section id="powerbi">
+  <div class="section-inner">
+    <div class="section-label">Power BI · 3 Pages</div>
+    <h2 class="section-title">Power BI Report</h2>
+    <p class="section-sub">The full Power BI dashboard — KPI cards, trend charts, coverage gap analysis, and data quality checks across three report pages.</p>
+    <div class="screenshots reveal">
+      <div class="screenshot-card">
+        <img src="glp.1.png" alt="Page 1 — Total Medicare Spending Overview" />
+        <div class="screenshot-meta">
+          <span class="screenshot-num">PAGE 01</span>
+          <span class="screenshot-title">Total Medicare Spending Overview</span>
+        </div>
+      </div>
+      <div class="screenshot-card">
+        <img src="glp.2.png" alt="Page 2 — Coverage Gap & Cost Burden" />
+        <div class="screenshot-meta">
+          <span class="screenshot-num">PAGE 02</span>
+          <span class="screenshot-title">Coverage Gap & Cost Burden Analysis</span>
+        </div>
+      </div>
+      <div class="screenshot-card">
+        <img src="glp.3.png" alt="Page 3 — Data Quality & Key Takeaways" />
+        <div class="screenshot-meta">
+          <span class="screenshot-num">PAGE 03</span>
+          <span class="screenshot-title">Data Quality Check & Key Takeaways</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEY FINDINGS -->
+<section id="findings" style="background: var(--surface2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="section-inner">
+    <div class="section-label">Analysis Output</div>
+    <h2 class="section-title">Key Findings</h2>
+    <p class="section-sub">From five years of CMS data, cleaned and modeled across 8 GLP-1 drugs.</p>
+    <div class="findings-grid reveal">
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_01</div>
+        <p class="finding-text">Medicare Part D spending rose from <strong>~$1B in 2019 to over $20B in 2023</strong> — a 20× increase in four years.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_02</div>
+        <p class="finding-text">Beneficiaries grew <strong>471%</strong>, from 535.7K to 3.06M — confirming demand-driven growth, not just price inflation.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_03</div>
+        <p class="finding-text">Diabetes drugs (Ozempic, Trulicity, Rybelsus) drove <strong>$18.22B in 2023 spend</strong> — all fully covered under Part D.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_04</div>
+        <p class="finding-text">Obesity drugs remain excluded by statute. <strong>2023 spend: $233.72K</strong> — near-zero despite equivalent clinical efficacy.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_05</div>
+        <p class="finding-text">Ozempic's avg cost per claim grew <strong>25.8% from 2019–2023</strong>, revealing price inflation on top of patient volume growth.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon">FINDING_06</div>
+        <p class="finding-text">Only <strong>3 CMS outlier flags</strong> across the window — both tied to low-volume obesity drugs, validating data integrity.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section id="workflow">
+  <div class="section-inner">
+    <div class="section-label">End-to-End Pipeline</div>
+    <h2 class="section-title">Analytical Workflow</h2>
+    <p class="section-sub">A full Python → Power BI pipeline, from raw CMS data to a decision-ready dashboard.</p>
+    <div class="workflow-steps reveal">
+      <div class="workflow-step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <h3>Data Cleaning</h3>
+          <p>Dropped non-relevant columns, removed 2,201 duplicate rows while retaining legitimate multi-row brand/generic entries. Nulls resolved by cause — zero-activity years filled with 0; CMS privacy-suppressed counts left as NaN.</p>
+          <div class="step-tags"><span class="step-tag">pandas</span><span class="step-tag">deduplication</span><span class="step-tag">null handling</span></div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <h3>Feature Engineering</h3>
+          <p>Built Spending_Growth_%, Beneficiary_Growth_%, Price_Change_% (2019→2023) with divide-by-zero guards. Added Avg_5Y_Spending, Spending_Volatility (std), and Top10_Drug / New_Drug flags. Validated with matplotlib before dashboarding.</p>
+          <div class="step-tags"><span class="step-tag">CAGR</span><span class="step-tag">pandas</span><span class="step-tag">matplotlib</span><span class="step-tag">feature flags</span></div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <h3>Data Modeling in Power BI</h3>
+          <p>Wide base table for KPIs + DAX measures. Three long (unpivoted) reference tables for trend charts. Coverage_Status and Indication columns derived from FDA indications and Medicare statute (SSA §1860D-2(e)(2)(A)).</p>
+          <div class="step-tags"><span class="step-tag">Power Query</span><span class="step-tag">unpivot</span><span class="step-tag">data model</span></div>
+        </div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <h3>DAX Measures & Dashboard</h3>
+          <p>5-year CAGR, YoY growth, per-drug spend isolation, outlier flag aggregation — all with zero-division guards. Three pages: spending overview, coverage gap, and data quality validation.</p>
+          <div class="step-tags"><span class="step-tag">DAX</span><span class="step-tag">Power BI</span><span class="step-tag">KPI cards</span><span class="step-tag">donut chart</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA SOURCE -->
+<section style="padding-top: 0; padding-bottom: 5rem;">
+  <div class="section-inner reveal">
+    <div class="section-label">Data Provenance</div>
+    <h2 class="section-title">Dataset</h2>
+    <div class="data-box">
+      <p>Source: <a href="https://data.cms.gov/summary-statistics-on-use-and-payments/medicare-medicaid-spending-by-drug" target="_blank">CMS Medicare Part D Spending by Drug ↗</a></p>
+      <table class="data-table">
+        <tr><td>Size</td><td>14,309 rows × 46 columns (all Part D drugs nationally)</td></tr>
+        <tr><td>Period</td><td>2019–2023</td></tr>
+        <tr><td>Granularity</td><td>One row per drug; yearly metrics in separate columns</td></tr>
+        <tr><td>Key metrics</td><td>Total spending, claims, beneficiaries, dosage units, avg spend per claim/beneficiary/unit, CMS outlier flags</td></tr>
+        <tr><td>Scope note</td><td>Gross drug cost only — excludes manufacturer rebates (CMS is statutorily barred from disclosing these)</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">Built by <span>Alviya</span> · VIT Chennai · ECE 2027</div>
+  <div class="footer-right">
+    <a href="https://github.com/alviyar" target="_blank">GitHub ↗</a>
+    <a href="https://github.com/alviyar/GLP-1-Drug-Market-Impact-Analysis" target="_blank">Repo ↗</a>
+    <a href="https://github.com/alviyar/GLP-1-Drug-Market-Impact-Analysis/blob/main/Medicare_Part_D.ipynb" target="_blank">Notebook ↗</a>
+  </div>
+</footer>
+
+<script>
+// ── TAB SWITCHING ──
+function showTab(id, btn) {
+  document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── CHART.JS DEFAULTS ──
+const ROSE   = '#b85c52';
+const TEAL   = '#3a7a72';
+const GOLD   = '#a07840';
+const SLATE  = '#6a7a8a';
+const PURPLE = '#7a60a0';
+const MUTED  = '#8a7a6e';
+const BORDER = '#ddd8cf';
+const TEXT   = '#1e1a16';
+
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = MUTED;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.padding  = 14;
+
+const gridOpts = { color: BORDER, drawBorder: false };
+
+// ── PAGE 1 CHARTS ──
+// Spend Trend
+new Chart(document.getElementById('spendTrend'), {
+  type: 'line',
+  data: {
+    labels: ['2019','2020','2021','2022','2023'],
+    datasets: [
+      { label: 'Ozempic',  data: [0.48,0.82,1.89,4.85,12.6], borderColor: ROSE,   backgroundColor: ROSE+'22',   tension: 0.4, fill: false, borderWidth: 2.5, pointRadius: 4 },
+      { label: 'Trulicity',data: [0.33,0.56,0.80,0.84,4.2],  borderColor: TEAL,   backgroundColor: TEAL+'22',   tension: 0.4, fill: false, borderWidth: 2.5, pointRadius: 4 },
+      { label: 'Rybelsus', data: [0,0.12,0.34,0.72,1.4],      borderColor: GOLD,   backgroundColor: GOLD+'22',   tension: 0.4, fill: false, borderWidth: 2, pointRadius: 4 },
+      { label: 'Mounjaro', data: [0,0,0,0.22,1.9],            borderColor: PURPLE, backgroundColor: PURPLE+'22', tension: 0.4, fill: false, borderWidth: 2, pointRadius: 4 },
+      { label: 'Others',   data: [0.19,0.22,0.24,0.24,0.3],   borderColor: SLATE,  backgroundColor: SLATE+'22',  tension: 0.4, fill: false, borderWidth: 1.5, borderDash:[4,3], pointRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    scales: {
+      x: { grid: gridOpts },
+      y: { grid: gridOpts, ticks: { callback: v => '$' + v + 'B' } }
+    },
+    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y + 'B' } } }
+  }
+});
+
+// 2023 Donut
+new Chart(document.getElementById('spendDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Ozempic','Trulicity','Mounjaro','Rybelsus','Victoza','Others'],
+    datasets: [{ data: [12.6,4.2,1.9,1.4,0.058,0.242], backgroundColor: [ROSE,TEAL,PURPLE,GOLD,SLATE,'#c0a898'], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: {
+    responsive: true, cutout: '62%',
+    plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: ctx => ctx.label + ': $' + ctx.parsed + 'B' } } }
+  }
+});
+
+// YoY Bar (2022→2023, excluding Mounjaro distortion)
+new Chart(document.getElementById('yoyBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Ozempic','Trulicity','Rybelsus','Victoza','Saxenda'],
+    datasets: [{ label: 'YoY Growth %', data: [160, 400, 94, -12, -22], backgroundColor: [ROSE,TEAL,GOLD,SLATE,'#c0a898'], borderRadius: 3 }]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { grid: { display: false } }, y: { grid: gridOpts, ticks: { callback: v => v + '%' } } },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + '%' } } }
+  }
+});
+
+// ── PAGE 2 CHARTS ──
+new Chart(document.getElementById('coverageBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Diabetes Drugs\n(Covered)','Obesity Drugs\n(Excluded)'],
+    datasets: [{ data: [18.22, 0.000234], backgroundColor: [TEAL, ROSE], borderRadius: 4 }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: gridOpts, type: 'logarithmic', ticks: { callback: v => v >= 1 ? '$' + v + 'B' : '$' + (v*1000).toFixed(0) + 'K' } }
+    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.dataIndex === 0 ? '$18.22B' : '$233.72K' } } }
+  }
+});
+
+new Chart(document.getElementById('beneLine'), {
+  type: 'line',
+  data: {
+    labels: ['2019','2020','2021','2022','2023'],
+    datasets: [
+      { label: 'Diabetes drugs', data: [535,720,1080,1920,3050], borderColor: TEAL, backgroundColor: TEAL+'22', tension: 0.4, fill: true, borderWidth: 2.5, pointRadius: 4 },
+      { label: 'Obesity drugs',  data: [8,5,4,2,1],              borderColor: ROSE, backgroundColor: ROSE+'22', tension: 0.4, fill: true, borderWidth: 2,   pointRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { grid: gridOpts }, y: { grid: gridOpts, ticks: { callback: v => v + 'K' } } },
+    plugins: { legend: { position: 'top' } }
+  }
+});
+
+// ── PAGE 3 CHARTS ──
+new Chart(document.getElementById('costTrend'), {
+  type: 'line',
+  data: {
+    labels: ['2019','2020','2021','2022','2023'],
+    datasets: [
+      { label: 'Ozempic',   data: [938,980,1020,1098,1180], borderColor: ROSE,   tension: 0.4, borderWidth: 2.5, pointRadius: 4 },
+      { label: 'Trulicity', data: [1020,1050,1080,1100,1130], borderColor: TEAL,  tension: 0.4, borderWidth: 2,   pointRadius: 4 },
+      { label: 'Rybelsus',  data: [null,860,900,940,980],    borderColor: GOLD,  tension: 0.4, borderWidth: 2,   pointRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { grid: gridOpts }, y: { grid: gridOpts, ticks: { callback: v => '$' + v } } },
+    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y } } }
+  }
+});
+
+new Chart(document.getElementById('outlierBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Ozempic','Trulicity','Rybelsus','Mounjaro','Saxenda','Wegovy'],
+    datasets: [{ label: 'CMS Outlier Flags', data: [0,0,0,0,2,1], backgroundColor: [TEAL,TEAL,TEAL,TEAL,ROSE,ROSE], borderRadius: 3 }]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { grid: { display: false } }, y: { grid: gridOpts, ticks: { stepSize: 1 } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(
+  entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
+  { threshold: 0.08 }
+);
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
